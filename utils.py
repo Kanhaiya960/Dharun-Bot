@@ -8,6 +8,7 @@ from typing import Union, List
 from datetime import datetime, timedelta
 from database.users_chats_db import db
 from bs4 import BeautifulSoup
+from database.join_reqs import JoinReqs as db2
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -34,17 +35,29 @@ class temp(object):
     GP_SPELL = {}
 
 async def is_subscribed(bot, query):
+    if not (AUTH_CHANNEL or REQ_CHANNEL):
+        return True
+    elif query.from_user.id in ADMINS:
+        return True
+
+    if db2().isActive():
+        user = await db2().get_user(query.from_user.id)
+        if user:
+            return True
+        else:
+            return False
     try:
         user = await bot.get_chat_member(AUTH_CHANNEL, query.from_user.id)
     except UserNotParticipant:
-        pass
+        return False
     except Exception as e:
-        print(e)
+        logger.exception(e)
+        return False
     else:
-        if user.status != enums.ChatMemberStatus.BANNED:
+        if not user.status == enums.ChatMemberStatus.BANNED:
             return True
-    return False
-
+        else:
+            return False
 
 async def get_poster(query, bulk=False, id=False, file=None):
     imdb = Cinemagoer() 
