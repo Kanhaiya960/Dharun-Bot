@@ -61,7 +61,7 @@ async def save_file(media):
             file_name=file_name,
             file_size=media.file_size,
             file_type=media.file_type,
-            mime_type=media.mime_type
+            mime_type=media.mime_type,
             caption=file_caption
         )
     except ValidationError:
