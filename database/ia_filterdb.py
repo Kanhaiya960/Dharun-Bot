@@ -17,6 +17,20 @@ client = AsyncIOMotorClient(FILE_DB_URL)
 db = client[FILE_DB_NAME]
 instance = Instance.from_db(db)
 
+replacements = [
+    (r"\bAuds\b", "Audios"),
+    (r"\bAud\b", "Audio"),
+    (r"\bOrg\b", "Original"),
+    (r"\bTam\b", "Tamil"),
+    (r"\bTel\b", "Telugu"),
+    (r"\bHin\b", "Hindi"),
+    (r"\bEng\b", "English"),
+    (r"\bMal\b", "Malayalam"),
+    (r"\bKan\b", "Kannada"),
+    (r"\bKor\b", "Korean"),
+    (r"\bChi\b", "Chinese"),
+]
+
 @instance.register
 class Media(Document):
     file_id = fields.StrField(attribute='_id')
@@ -30,10 +44,16 @@ class Media(Document):
     class Meta:
         collection_name = COLLECTION_NAME
 
-
 async def save_file(media):
+    """Save file in database"""
+
+    # TODO: Find better way to get same file_id for same media to avoid duplicates
     file_id, file_ref = unpack_new_file_id(media.file_id)
-    file_name = re.sub(r"@\w+|(_|\-|\.|\+)", " ", str(media.file_name))
+    file_name = re.sub(r"@[\w-]+|(_)", " ", str(media.file_name))
+    file_caption = str(media.caption)
+    for pattern, replacement in replacements:
+        file_name = re.sub(pattern, replacement, file_name)
+        file_caption = re.sub(pattern, replacement, file_caption)
     try:
         file = Media(
             file_id=file_id,
@@ -42,6 +62,7 @@ async def save_file(media):
             file_size=media.file_size,
             file_type=media.file_type,
             mime_type=media.mime_type
+            caption=file_caption
         )
     except ValidationError:
         logger.exception('Error Occurred While Saving File In Database')
