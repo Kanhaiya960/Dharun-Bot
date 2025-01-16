@@ -1,3 +1,6 @@
+not index command 
+Admin panel problem 
+
 <img src="https://envs.sh/Nvb.jpg">
 <img src="https://envs.sh/Nvi.jpg">
 <p align="center">
